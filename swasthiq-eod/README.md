@@ -1,5 +1,9 @@
 # EOD Billing & Analytics Agent
 
+**Live app:** https://swasthiq-eod-frontend.vercel.app
+**Backend API:** https://swasthiq-eod-agent-ekcg.onrender.com
+**Repo:** https://github.com/missaarohi/swasthiq-eod-agent
+
 A Python REST API that turns a clinic's daily billing log into (1) a deterministic end-of-day
 reconciliation, (2) analytics, and (3) a short WhatsApp-style narrative written by a language model
 and checked against the numbers. A React app presents the three screens.
@@ -151,5 +155,8 @@ The live Anthropic call itself is only covered by its error path in tests; test 
 - Backend (Render/Railway/Fly): root `backend`, build `pip install -r requirements.txt`,
   start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, set `ANTHROPIC_API_KEY` and `CORS_ORIGINS`.
   Free tiers have ephemeral disks; the sample days are re-seeded on boot, uploaded days may not survive a restart.
+
 - Frontend (Vercel/Netlify): root `frontend`, build `npm run build`, output `dist`,
   set `VITE_API_BASE_URL` to the backend URL. `vercel.json` handles SPA routing.
+
+**Deployed here:** backend on Render (`https://swasthiq-eod-agent-ekcg.onrender.com`), frontend on Vercel (`https://swasthiq-eod-frontend.vercel.app`).
