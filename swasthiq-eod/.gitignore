@@ -1,0 +1,9 @@
+node_modules/
+dist/
+__pycache__/
+.pytest_cache/
+backend/data/
+.env
+*.db
+venv/
+WALKTHROUGH.md
