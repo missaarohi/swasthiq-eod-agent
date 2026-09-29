@@ -19,8 +19,8 @@ frontend/   React + Vite. Three screens with a shared sidebar
 # backend  (http://localhost:8000, docs at /docs)
 cd backend
 pip install -r requirements.txt
-# Optional: Gemini is preferred when both provider keys are set.
-export GEMINI_API_KEY=...              # or set ANTHROPIC_API_KEY instead
+# Optional; without a provider key, narratives use a fixed template.
+export GEMINI_API_KEY=...              # Gemini is preferred; Anthropic is supported as a fallback
 uvicorn app.main:app --reload
 python -m pytest -q                     # 47 tests
 
@@ -33,10 +33,10 @@ On first start the three sample days are loaded automatically (`SEED_SAMPLE_DATA
 
 | Env var | Default | Meaning |
 |---|---|---|
-| `GEMINI_API_KEY` | empty | Enables Gemini narratives; takes priority when both provider keys are set |
+| `GEMINI_API_KEY` | empty | Enables the LLM narrative (Google Gemini, free tier). Empty = deterministic template, clearly labelled |
 | `GEMINI_MODEL` | `gemini-flash-latest` | Gemini model used when `GEMINI_API_KEY` is set |
-| `ANTHROPIC_API_KEY` | empty | Enables the LLM narrative. Empty = deterministic template, clearly labelled |
-| `LLM_MODEL` | `claude-haiku-4-5-20251001` | Model used for the narrative |
+| `ANTHROPIC_API_KEY` | empty | Optional alternative provider; used when no Gemini key is set |
+| `LLM_MODEL` | `claude-haiku-4-5-20251001` | Anthropic model used when `ANTHROPIC_API_KEY` is set |
 | `DB_PATH` | `backend/data/eod.db` | SQLite file |
 | `HOUR_BUCKET_OFFSET_MINUTES` | `0` | Hour-of-day bucketing offset. `0` = UTC (as the brief says); `330` = IST |
 | `CORS_ORIGINS` | `*` | Comma-separated allowed origins |
@@ -141,7 +141,7 @@ All problems in a row are listed together.
 3. The server substitutes the exact display strings from the report and returns `traced_figures`, each pointing to
    the report field it came from (shown in the UI panel).
 4. One retry with the rejection reason. Then the deterministic template is used and labelled `fallback`.
-5. If the model omits the "profit can't be computed" sentence, the server appends it and says so in `notes`.
+5. If the model omits the "profit can't be computed" sentence, the server appends it and says so in `notes`. LLM used: Google Gemini (gemini-flash-latest), free tier via Google AI Studio. When the free tier is briefly overloaded, Gemini returns a 503 and the narrative falls back to the deterministic template automatically.
 
 Limitation: the checks guarantee every number is real, not that every word is wise. The prompt forbids comparisons
 and trends, but the code cannot verify qualitative claims.
@@ -151,12 +151,12 @@ and trends, but the code cannot verify qualitative claims.
 `python -m pytest -q` runs 47 tests: validation (each rule), reconciliation on all three sample days,
 narrative checks with a scripted fake model (bad JSON, typed numbers, unknown keys, provider outage, retry),
 and API behaviour (replace, strict, cache invalidation, structured errors).
-The live Anthropic call itself is only covered by its error path in tests; test it once with your key.
+Live provider calls are not exercised by the automated tests; verify the configured provider once with its API key.
 
 ## Deploy
 
 - Backend (Render/Railway/Fly): root `backend`, build `pip install -r requirements.txt`,
-  start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, set `GEMINI_API_KEY` or `ANTHROPIC_API_KEY`, plus `CORS_ORIGINS`.
+   start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, set `GEMINI_API_KEY` (or `ANTHROPIC_API_KEY` as a fallback), plus `CORS_ORIGINS`.
   Free tiers have ephemeral disks; the sample days are re-seeded on boot, uploaded days may not survive a restart.
 
 - Frontend (Vercel/Netlify): root `frontend`, build `npm run build`, output `dist`,
