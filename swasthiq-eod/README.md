@@ -15,7 +15,8 @@ frontend/   React + Vite. Three screens with a shared sidebar
 # backend  (http://localhost:8000, docs at /docs)
 cd backend
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...     # optional; without it the narrative uses a fixed template
+# Optional: Gemini is preferred when both provider keys are set.
+export GEMINI_API_KEY=...              # or set ANTHROPIC_API_KEY instead
 uvicorn app.main:app --reload
 python -m pytest -q                     # 47 tests
 
@@ -28,6 +29,8 @@ On first start the three sample days are loaded automatically (`SEED_SAMPLE_DATA
 
 | Env var | Default | Meaning |
 |---|---|---|
+| `GEMINI_API_KEY` | empty | Enables Gemini narratives; takes priority when both provider keys are set |
+| `GEMINI_MODEL` | `gemini-flash-latest` | Gemini model used when `GEMINI_API_KEY` is set |
 | `ANTHROPIC_API_KEY` | empty | Enables the LLM narrative. Empty = deterministic template, clearly labelled |
 | `LLM_MODEL` | `claude-haiku-4-5-20251001` | Model used for the narrative |
 | `DB_PATH` | `backend/data/eod.db` | SQLite file |
@@ -149,7 +152,7 @@ The live Anthropic call itself is only covered by its error path in tests; test 
 ## Deploy
 
 - Backend (Render/Railway/Fly): root `backend`, build `pip install -r requirements.txt`,
-  start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, set `ANTHROPIC_API_KEY` and `CORS_ORIGINS`.
+  start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, set `GEMINI_API_KEY` or `ANTHROPIC_API_KEY`, plus `CORS_ORIGINS`.
   Free tiers have ephemeral disks; the sample days are re-seeded on boot, uploaded days may not survive a restart.
 - Frontend (Vercel/Netlify): root `frontend`, build `npm run build`, output `dist`,
   set `VITE_API_BASE_URL` to the backend URL. `vercel.json` handles SPA routing.
