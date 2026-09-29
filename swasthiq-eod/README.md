@@ -19,7 +19,7 @@ frontend/   React + Vite. Three screens with a shared sidebar
 # backend  (http://localhost:8000, docs at /docs)
 cd backend
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...     # optional; without it the narrative uses a fixed template
+export GEMINI_API_KEY=AIza...     # optional; without it the narrative uses a fixed template
 uvicorn app.main:app --reload
 python -m pytest -q                     # 47 tests
 
@@ -32,8 +32,8 @@ On first start the three sample days are loaded automatically (`SEED_SAMPLE_DATA
 
 | Env var | Default | Meaning |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | empty | Enables the LLM narrative. Empty = deterministic template, clearly labelled |
-| `LLM_MODEL` | `claude-haiku-4-5-20251001` | Model used for the narrative |
+| `GEMINI_API_KEY` | empty | Enables the LLM narrative (Google Gemini, free tier). Empty = deterministic template, clearly labelled |
+| `GEMINI_MODEL` | `gemini-flash-latest` | Gemini Model used for the narrative |
 | `DB_PATH` | `backend/data/eod.db` | SQLite file |
 | `HOUR_BUCKET_OFFSET_MINUTES` | `0` | Hour-of-day bucketing offset. `0` = UTC (as the brief says); `330` = IST |
 | `CORS_ORIGINS` | `*` | Comma-separated allowed origins |
@@ -138,7 +138,7 @@ All problems in a row are listed together.
 3. The server substitutes the exact display strings from the report and returns `traced_figures`, each pointing to
    the report field it came from (shown in the UI panel).
 4. One retry with the rejection reason. Then the deterministic template is used and labelled `fallback`.
-5. If the model omits the "profit can't be computed" sentence, the server appends it and says so in `notes`.
+5. If the model omits the "profit can't be computed" sentence, the server appends it and says so in `notes`. LLM used: Google Gemini (gemini-flash-latest), free tier via Google AI Studio. When the free tier is briefly overloaded, Gemini returns a 503 and the narrative falls back to the deterministic template automatically.
 
 Limitation: the checks guarantee every number is real, not that every word is wise. The prompt forbids comparisons
 and trends, but the code cannot verify qualitative claims.
@@ -153,7 +153,7 @@ The live Anthropic call itself is only covered by its error path in tests; test 
 ## Deploy
 
 - Backend (Render/Railway/Fly): root `backend`, build `pip install -r requirements.txt`,
-  start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, set `ANTHROPIC_API_KEY` and `CORS_ORIGINS`.
+  start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, set `GEMINI_API_KEY` and `CORS_ORIGINS`.
   Free tiers have ephemeral disks; the sample days are re-seeded on boot, uploaded days may not survive a restart.
 
 - Frontend (Vercel/Netlify): root `frontend`, build `npm run build`, output `dist`,
